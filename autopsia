@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuestionario de Autopsia</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom font for better aesthetics */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5; /* Light gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /* Custom styles for buttons to make them more appealing */
+        .quiz-button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .quiz-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .quiz-button.correct {
+            background-color: #4CAF50 !important; /* Green for correct */
+            color: white !important;
+        }
+        .quiz-button.incorrect {
+            background-color: #F44336 !important; /* Red for incorrect */
+            color: white !important;
+        }
+        .quiz-button.disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        /* Message box styling */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+        .message-box button {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #3B82F6; /* Blue */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div id="quiz-container" class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl border border-gray-200">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Cuestionario de Autopsia</h1>
+
+        <div id="question-display" class="mb-6">
+            <p id="question-text" class="text-xl text-gray-700 mb-4 font-semibold"></p>
+            <div id="options-container" class="grid grid-cols-1 gap-4">
+                <!-- Options will be dynamically loaded here -->
+            </div>
+        </div>
+
+        <div id="feedback-display" class="text-center text-lg font-medium mb-6"></div>
+
+        <div class="flex justify-between items-center">
+            <button id="next-button" class="quiz-button bg-blue-500 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50" style="display: none;">Siguiente Pregunta</button>
+            <p id="score-display" class="text-xl font-bold text-gray-700">Puntuación: 0 / 0</p>
+            <button id="restart-button" class="quiz-button bg-gray-400 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50" style="display: none;">Reiniciar Cuestionario</button>
+        </div>
+    </div>
+
+    <!-- Message Box HTML -->
+    <div id="message-box" class="message-box">
+        <p id="message-text" class="text-lg text-gray-800"></p>
+        <button id="message-ok-button">OK</button>
+    </div>
+
+    <script>
+        // Array of questions, options, and correct answers
+        const questions = [
+            {
+                question: "¿Cuál es el significado etimológico de la palabra 'autopsia'?",
+                options: [
+                    "Ver al paciente",
+                    "Ver por uno mismo",
+                    "Estudiar la muerte",
+                    "Analizar los órganos"
+                ],
+                correctAnswer: 1 // Index of the correct answer in the options array
+            },
+            {
+                question: "Según su amplitud, ¿qué tipo de autopsia estudia solo algunos órganos o partes de órganos?",
+                options: [
+                    "Autopsia total",
+                    "Autopsia médico-legal",
+                    "Autopsia parcial",
+                    "Autopsia anatomo-clínica"
+                ],
+                correctAnswer: 2
+            },
+            {
+                question: "¿Qué tipo de autopsia NO requiere autorización de los familiares?",
+                options: [
+                    "Autopsia anatomo-clínica",
+                    "Autopsia de investigación",
+                    "Autopsia parcial",
+                    "Autopsia médico-legal o forense"
+                ],
+                correctAnswer: 3
+            },
+            {
+                question: "¿Cuál es la técnica más utilizada para la apertura del cadáver y extracción de órganos mencionada en el texto?",
+                options: [
+                    "Técnica de Virchow",
+                    "Técnica de Rokitansky",
+                    "Técnica de Ghon",
+                    "Técnica de Letulle"
+                ],
+                correctAnswer: 1
+            }
+        ];
+
+        // DOM elements
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackDisplay = document.getElementById('feedback-display');
+        const nextButton = document.getElementById('next-button');
+        const scoreDisplay = document.getElementById('score-display');
+        const restartButton = document.getElementById('restart-button');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const messageOkButton = document.getElementById('message-ok-button');
+
+        // Quiz state variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answeredCurrentQuestion = false;
+
+        /**
+         * Displays a custom message box instead of alert().
+         * @param {string} message - The message to display.
+         */
+        function showMessageBox(message) {
+            messageText.textContent = message;
+            messageBox.style.display = 'block';
+        }
+
+        /**
+         * Hides the custom message box.
+         */
+        function hideMessageBox() {
+            messageBox.style.display = 'none';
+        }
+
+        // Event listener for the OK button in the message box
+        messageOkButton.addEventListener('click', hideMessageBox);
+
+        /**
+         * Loads and displays the current question and its options.
+         */
+        function loadQuestion() {
+            // Reset feedback and button states
+            feedbackDisplay.textContent = '';
+            nextButton.style.display = 'none';
+            restartButton.style.display = 'none';
+            optionsContainer.innerHTML = ''; // Clear previous options
+            answeredCurrentQuestion = false;
+
+            // If all questions are answered, show final score and restart button
+            if (currentQuestionIndex >= questions.length) {
+                questionText.textContent = '¡Cuestionario completado!';
+                optionsContainer.innerHTML = `<p class="text-center text-2xl font-bold text-blue-600">Tu puntuación final es: ${score} de ${questions.length}</p>`;
+                scoreDisplay.textContent = `Puntuación: ${score} / ${questions.length}`;
+                restartButton.style.display = 'block';
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            questionText.textContent = currentQuestion.question;
+            scoreDisplay.textContent = `Puntuación: ${score} / ${currentQuestionIndex}`; // Update score for current question number
+
+            // Create buttons for each option
+            currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add(
+                    'quiz-button',
+                    'bg-gray-100',
+                    'text-gray-800',
+                    'px-4',
+                    'py-3',
+                    'rounded-lg',
+                    'text-left',
+                    'hover:bg-blue-100',
+                    'focus:outline-none',
+                    'focus:ring-2',
+                    'focus:ring-blue-300',
+                    'focus:ring-opacity-50',
+                    'font-medium'
+                );
+                button.dataset.index = index; // Store the index of the option
+                button.addEventListener('click', checkAnswer);
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        /**
+         * Checks if the selected answer is correct, updates score and feedback.
+         * @param {Event} event - The click event from the option button.
+         */
+        function checkAnswer(event) {
+            // Prevent multiple answers for the same question
+            if (answeredCurrentQuestion) {
+                return;
+            }
+            answeredCurrentQuestion = true;
+
+            const selectedOptionIndex = parseInt(event.target.dataset.index);
+            const currentQuestion = questions[currentQuestionIndex];
+            const allOptionButtons = optionsContainer.querySelectorAll('button');
+
+            // Disable all option buttons after an answer is selected
+            allOptionButtons.forEach(button => {
+                button.classList.add('disabled');
+                button.removeEventListener('click', checkAnswer); // Remove listener to prevent re-clicking
+            });
+
+            // Highlight correct and incorrect answers
+            if (selectedOptionIndex === currentQuestion.correctAnswer) {
+                feedbackDisplay.textContent = '¡Correcto!';
+                feedbackDisplay.classList.remove('text-red-600');
+                feedbackDisplay.classList.add('text-green-600');
+                event.target.classList.add('correct');
+                score++;
+            } else {
+                feedbackDisplay.textContent = 'Incorrecto. La respuesta correcta era: ' + currentQuestion.options[currentQuestion.correctAnswer];
+                feedbackDisplay.classList.remove('text-green-600');
+                feedbackDisplay.classList.add('text-red-600');
+                event.target.classList.add('incorrect');
+                // Also highlight the correct answer
+                allOptionButtons[currentQuestion.correctAnswer].classList.add('correct');
+            }
+
+            // Update score display
+            scoreDisplay.textContent = `Puntuación: ${score} / ${currentQuestionIndex + 1}`;
+
+            // Show the next question button
+            nextButton.style.display = 'block';
+        }
+
+        /**
+         * Moves to the next question or ends the quiz.
+         */
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        /**
+         * Resets the quiz to its initial state.
+         */
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        // Event listeners for navigation buttons
+        nextButton.addEventListener('click', nextQuestion);
+        restartButton.addEventListener('click', restartQuiz);
+
+        // Initial load of the first question when the page loads
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>
