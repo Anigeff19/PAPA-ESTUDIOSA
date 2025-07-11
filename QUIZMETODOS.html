@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz de Anatomía Patológica</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 700px;
+            width: 100%;
+            text-align: center;
+        }
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+            color: #333;
+        }
+        .answer-options button {
+            width: 100%;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            background-color: #f9f9f9;
+            text-align: left;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .answer-options button:hover:not(.selected) {
+            background-color: #eef2ff;
+            border-color: #c7d2fe;
+        }
+        .answer-options button.selected {
+            border-width: 2px;
+        }
+        .answer-options button.correct {
+            background-color: #d4edda; /* Light green */
+            border-color: #28a745; /* Green */
+        }
+        .answer-options button.incorrect {
+            background-color: #f8d7da; /* Light red */
+            border-color: #dc3545; /* Red */
+        }
+        .feedback-box {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+        }
+        .feedback-box.correct {
+            background-color: #e6ffe6;
+            border: 1px solid #28a745;
+            color: #155724;
+        }
+        .feedback-box.incorrect {
+            background-color: #ffe6e6;
+            border: 1px solid #dc3545;
+            color: #721c24;
+        }
+        .navigation-buttons {
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        .navigation-buttons button {
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .navigation-buttons button:hover {
+            transform: translateY(-2px);
+        }
+        .next-button {
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+        }
+        .next-button:hover {
+            background-color: #4338ca;
+        }
+        .restart-button {
+            background-color: #6b7280;
+            color: white;
+            border: none;
+        }
+        .restart-button:hover {
+            background-color: #4b5563;
+        }
+        .score-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-top: 30px;
+        }
+        .hint-text {
+            font-style: italic;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .quiz-container {
+                padding: 20px;
+                margin: 10px;
+            }
+            .question-text {
+                font-size: 1.25rem;
+            }
+            .answer-options button {
+                font-size: 1rem;
+                padding: 12px 15px;
+            }
+            .navigation-buttons {
+                flex-direction: column;
+            }
+            .navigation-buttons button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <div id="question-number" class="text-gray-500 text-sm mb-4"></div>
+        <div id="question-text" class="question-text"></div>
+        <div id="hint-text" class="hint-text"></div>
+        <div id="answer-options" class="answer-options"></div>
+        <div id="feedback-box" class="feedback-box hidden"></div>
+        <div id="navigation-buttons" class="navigation-buttons">
+            <button id="next-button" class="next-button">Siguiente Pregunta</button>
+        </div>
+        <div id="score-display" class="score-display hidden"></div>
+        <button id="restart-button" class="restart-button hidden mt-4">Reiniciar Quiz</button>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                "question": "¿Cuál es la diferencia fundamental que distingue una autopsia anátomo-clínica de una médico-legal en cuanto al procedimiento inicial?",
+                "hint": "Piense en quién tiene la autoridad para iniciar el procedimiento y qué implicaciones tiene eso para la familia.",
+                "answerOptions": [
+                    {
+                        "text": "La autopsia médico-legal siempre es total, mientras que la anátomo-clínica puede ser parcial.",
+                        "rationale": "Aunque la extensión puede variar, la diferencia más fundamental se encuentra en el requisito de autorización y quién la solicita, no en la amplitud del estudio.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "La autopsia anátomo-clínica requiere la autorización de los familiares, mientras que la médico-legal es ordenada por un juez y no la necesita.",
+                        "rationale": "Esta distinción en la autorización es la principal diferencia de procedimiento, ya que una responde a un interés clínico/familiar y la otra a una investigación judicial.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "La técnica de Rokitansky solo se utiliza en autopsias anátomo-clínicas.",
+                        "rationale": "La técnica de evisceración utilizada no es el diferenciador principal; la autoridad que la solicita y el requisito del consentimiento son los factores clave.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "En la autopsia anátomo-clínica los órganos permanecen en el cadáver, a diferencia de la médico-legal.",
+                        "rationale": "Esta afirmación invierte los roles; en la autopsia anátomo-clínica, los órganos se extraen para un estudio completo, lo cual es un punto de contraste clave.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "En citopatología, ¿cuál de los siguientes es considerado un criterio nuclear de malignidad?",
+                "hint": "Los cambios malignos a menudo implican variabilidad y desorden en el núcleo celular.",
+                "answerOptions": [
+                    {
+                        "text": "Vacuolización citoplasmática.",
+                        "rationale": "La vacuolización ocurre en el citoplasma y, aunque puede ser un hallazgo en células anormales, no es un criterio nuclear.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Relación núcleo-citoplasma normal (1:4).",
+                        "rationale": "Una relación núcleo-citoplasma normal es característica de células sanas, mientras que las células malignas suelen tener esta relación alterada con un núcleo más grande.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Poiquilocariosis (núcleos de diferente forma).",
+                        "rationale": "La variación en la forma de los núcleos es un indicador de inestabilidad y desregulación celular, característico de la malignidad.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Queratinización.",
+                        "rationale": "La queratinización es un proceso que ocurre en el citoplasma y se refiere a depósitos de queratina, no a una característica del núcleo.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "Un patólogo necesita un diagnóstico rápido durante una cirugía de mama para guiar la conducta del cirujano. ¿Qué tipo de biopsia es la más adecuada?",
+                "hint": "Considere qué técnica permite un análisis casi inmediato del tejido sin pasar por el proceso de fijación e inclusión en parafina que dura varias horas.",
+                "answerOptions": [
+                    {
+                        "text": "Biopsia por punción dirigida por ecografía.",
+                        "rationale": "Este es un método para obtener la muestra antes de la cirugía, no para un análisis rápido durante la misma.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia escisional.",
+                        "rationale": "Una biopsia escisional describe la extirpación completa de una lesión, pero no especifica el método de análisis rápido intraoperatorio.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia radioquirúrgica.",
+                        "rationale": "Este procedimiento se usa para localizar y extirpar lesiones no palpables, pero el análisis rápido del tejido obtenido se realiza mediante otra técnica.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia intraoperatoria (por congelación).",
+                        "rationale": "Esta técnica utiliza un criostato para congelar el tejido y permitir cortes finos y tinción rápida, proporcionando un diagnóstico en minutos durante el acto quirúrgico.",
+                        "isCorrect": true
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál es uno de los objetivos principales de la autopsia anátomo-clínica en la gestión de calidad de la atención médica?",
+                "hint": "Piense en cómo el estudio post-mortem puede funcionar como una auditoría del proceso de atención al paciente.",
+                "answerOptions": [
+                    {
+                        "text": "Facilitar material biológico para un Banco de Tumores.",
+                        "rationale": "Si bien este es un objetivo de investigación importante, el impacto directo en la gestión de calidad se relaciona más con la evaluación de la práctica clínica.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Asegurar una elevada calidad en los diagnósticos médicos y cuidados hospitalarios.",
+                        "rationale": "Al correlacionar los hallazgos clínicos con la patología real, la autopsia actúa como el control de calidad final, verificando diagnósticos y la efectividad de los tratamientos.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Colaborar en la enseñanza médica de grado y posgrado.",
+                        "rationale": "La enseñanza es un objetivo docente fundamental, pero el objetivo específico de gestión de calidad se centra en la evaluación y mejora de la atención al paciente.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Investigar enfermedades contagiosas, hereditarias u ocupacionales.",
+                        "rationale": "Este es un objetivo epidemiológico crucial, pero no se enfoca directamente en la evaluación de la calidad de la atención brindada en un caso específico.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué ventaja principal ofrece la Citología por Punción Aspiración con Aguja Fina (PAAF)?",
+                "hint": "Compare el procedimiento de obtener células con una aguja fina frente a la extracción de un fragmento de tejido.",
+                "answerOptions": [
+                    {
+                        "text": "Permite evaluar la invasión del estroma.",
+                        "rationale": "Esta es una de sus principales desventajas; al obtener solo células sueltas, no se puede evaluar la arquitectura del tejido ni la invasión.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Siempre proporciona un diagnóstico definitivo sin necesidad de biopsia.",
+                        "rationale": "A menudo requiere confirmación con biopsia, especialmente en casos sospechosos o cuando la muestra es insuficiente.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Permite un diagnóstico con invasión mínima.",
+                        "rationale": "El uso de una aguja fina hace que el procedimiento sea mucho menos cruento y traumático para el paciente en comparación con una biopsia quirúrgica.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Es el mejor método para estudiar la arquitectura de los tejidos de sostén.",
+                        "rationale": "La citología no puede evaluar la arquitectura tisular, ya que estudia células aisladas o en pequeños grupos, a diferencia de la biopsia.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "En un paciente con un tumor maligno de origen desconocido que ha hecho metástasis, ¿qué método auxiliar es más útil para determinar el sitio del tumor primario?",
+                "hint": "Busque la técnica que utiliza anticuerpos para identificar proteínas específicas de un órgano en las células tumorales.",
+                "answerOptions": [
+                    {
+                        "text": "Microscopía electrónica.",
+                        "rationale": "La microscopía electrónica es útil para ver detalles ultraestructurales de las células, pero no para identificar el tejido de origen a través de marcadores específicos.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Histoquímica con tinción de PAS.",
+                        "rationale": "La tinción de PAS detecta carbohidratos y es útil para ciertas patologías, pero no es específica para identificar el órgano de origen de una metástasis.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Inmunohistoquímica (IHQ).",
+                        "rationale": "La IHQ puede detectar antígenos específicos de un órgano (como el antígeno prostático específico) en las células metastásicas, ayudando a localizar el tumor primario.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Citometría de flujo.",
+                        "rationale": "La citometría de flujo es excelente para clasificar leucemias y linfomas analizando antígenos de superficie en células en suspensión, pero no para determinar el origen de un tumor sólido metastásico.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "Un dermatólogo extrae completamente un nevus (lunar) sospechoso junto con un pequeño margen de tejido sano. ¿Qué tipo de biopsia realizó?",
+                "hint": "Piense si se tomó solo una parte de la lesión o la lesión completa.",
+                "answerOptions": [
+                    {
+                        "text": "Biopsia por punción.",
+                        "rationale": "Una biopsia por punción obtiene un cilindro de tejido y no es el método descrito para extirpar una lesión completa.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia incisional.",
+                        "rationale": "Una biopsia incisional extrae solo una parte de la lesión para diagnóstico, no la lesión completa.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia escisional.",
+                        "rationale": "Este término describe precisamente la extirpación de la totalidad de la lesión, a menudo con un margen de seguridad, tal como se describe en el caso.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Citología por impronta.",
+                        "rationale": "La impronta es un método citológico donde se apoyan portaobjetos sobre el tejido, no un método de extirpación de tejido.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "Durante el procesamiento histológico de una biopsia, ¿qué paso sigue inmediatamente a la fijación en formol?",
+                "hint": "Antes de que el tejido pueda ser infiltrado con parafina, se debe eliminar un componente fundamental. ¿Cuál es?",
+                "answerOptions": [
+                    {
+                        "text": "Corte con micrótomo.",
+                        "rationale": "El corte con micrótomo se realiza después de que el tejido ha sido incluido en un bloque de parafina, no inmediatamente después de la fijación.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Inclusión en parafina.",
+                        "rationale": "La inclusión en parafina no es posible si el tejido aún contiene agua; este paso debe ser precedido por la deshidratación.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Coloración con Hematoxilina-Eosina.",
+                        "rationale": "La coloración es uno de los pasos finales que se realiza sobre el corte de tejido ya montado en un portaobjetos.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Deshidratación.",
+                        "rationale": "Después de la fijación, el agua debe ser extraída del tejido mediante pases sucesivos en alcoholes para permitir la posterior infiltración con parafina, que es hidrofóbica.",
+                        "isCorrect": true
+                    }
+                ]
+            },
+            {
+                "question": "En la técnica de autopsia de Rokitansky, ¿cómo se extraen principalmente los órganos de las cavidades torácica y abdominal?",
+                "hint": "Esta técnica es conocida por su método de extracción particular que mantiene las relaciones anatómicas.",
+                "answerOptions": [
+                    {
+                        "text": "Se extraen uno por uno, comenzando por el corazón.",
+                        "rationale": "La extracción de órganos uno por uno corresponde a otras técnicas, como la de Virchow. La técnica de Rokitansky tiene un enfoque diferente.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Se disecan y estudian in situ, sin extraerlos del cuerpo.",
+                        "rationale": "El estudio in situ es característico de la técnica de Letulle, no de la de Rokitansky, que sí implica la extracción de órganos.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Se extraen en un solo bloque, manteniendo sus conexiones anatómicas.",
+                        "rationale": "La característica distintiva de la técnica de Rokitansky es la evisceración en bloque, que permite un excelente estudio de las relaciones entre los órganos.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Se extraen en cuatro bloques separados (cervical, torácico, abdominal y pélvico).",
+                        "rationale": "La extracción en varios bloques corresponde a la técnica de Ghon, una modificación de la técnica de Rokitansky, pero no a la técnica original en sí.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál de las siguientes afirmaciones describe correctamente el propósito del Ateneo Anátomo-Clínico?",
+                "hint": "Piense en este evento como una reunión para conectar los puntos entre lo que se observó en el paciente vivo y lo que se encontró después de la muerte.",
+                "answerOptions": [
+                    {
+                        "text": "Es la reunión donde solo los patólogos realizan los diagnósticos macroscópicos de los órganos.",
+                        "rationale": "Esa reunión se llama conferencia macroscópica. El ateneo es más amplio e incluye a otros profesionales.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Es el proceso de redactar el informe final de la autopsia para el archivo.",
+                        "rationale": "La redacción del protocolo es un paso posterior; el ateneo es una reunión de debate e integración de la información.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Es una reunión multidisciplinaria para analizar el caso en forma completa, correlacionando la clínica con los hallazgos de la autopsia.",
+                        "rationale": "Esta es la definición precisa, destacando su naturaleza colaborativa y su objetivo de integrar toda la información disponible (clínica y patológica) para un aprendizaje completo.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Es el procedimiento legal para obtener el consentimiento informado de la familia.",
+                        "rationale": "La obtención del consentimiento es un paso administrativo y ético previo y fundamental, pero no corresponde al ateneo.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué método auxiliar en patología se utiliza para detectar antígenos celulares específicos en cortes de parafina, siendo útil para clasificar tumores malignos indiferenciados?",
+                "hint": "Este método se basa en la reacción antígeno-anticuerpo y produce una coloración visible bajo el microscopio óptico.",
+                "answerOptions": [
+                    {
+                        "text": "Microscopía electrónica.",
+                        "rationale": "La microscopía electrónica se enfoca en la ultraestructura celular y no utiliza la detección de antígenos mediante anticuerpos para la clasificación de tumores.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Histoquímica.",
+                        "rationale": "La histoquímica utiliza reacciones químicas para identificar componentes tisulares, pero no detecta antígenos específicos de forma tan precisa como el método que emplea anticuerpos.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Inmunofluorescencia (IF).",
+                        "rationale": "La inmunofluorescencia detecta antígenos usando fluorescencia, pero requiere tejido fresco y se degrada rápidamente, a diferencia del método que se usa en cortes de parafina.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Inmunohistoquímica (IHQ).",
+                        "rationale": "La inmunohistoquímica es el método que utiliza anticuerpos para detectar antígenos específicos en cortes de parafina, permitiendo la clasificación precisa de tumores indiferenciados.",
+                        "isCorrect": true
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál es la principal limitación de la citología en comparación con la biopsia, según el texto?",
+                "hint": "Considere lo que la citología estudia (células) versus lo que la biopsia estudia (tejidos) y qué información adicional puede proporcionar el segundo.",
+                "answerOptions": [
+                    {
+                        "text": "Su alto costo y complejidad técnica.",
+                        "rationale": "El texto menciona que la citología tiene la ventaja de ser de bajo costo y de técnica sencilla, lo cual contradice esta opción.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "No permite evaluar tejidos de sostén ni la invasión del estroma.",
+                        "rationale": "Esta es una limitación clave de la citología, ya que al estudiar células aisladas, no proporciona información sobre la arquitectura del tejido circundante o la invasión tumoral.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Requiere personal no capacitado para su realización.",
+                        "rationale": "El texto especifica que la citología 'debe ser realizada por personal capacitado', por lo que esta afirmación es incorrecta.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "No es fiable y tiene baja sensibilidad.",
+                        "rationale": "El texto indica que la citología es 'fiable y de alta sensibilidad', lo que refuta esta opción.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "En el contexto de una biopsia de mama, ¿cuál es el propósito principal de la detección del ganglio centinela mediante la inyección de Tecnecio 99?",
+                "hint": "Piense en la relación entre el tumor primario y la propagación de células cancerosas a los ganglios linfáticos cercanos.",
+                "answerOptions": [
+                    {
+                        "text": "Determinar si el tumor mamario es benigno o maligno en el acto operatorio.",
+                        "rationale": "La determinación de benignidad o malignidad del tumor se hace mediante la biopsia intraoperatoria del propio tumor, no por el estudio del ganglio centinela.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Identificar el primer ganglio al cual drena el tumor primario para predecir el estado de otros ganglios axilares.",
+                        "rationale": "El ganglio centinela es precisamente el primer ganglio de drenaje y su estado histológico es crucial para decidir si es necesario realizar un vaciamiento axilar completo.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Evaluar la presencia de microcalcificaciones en la muestra de la biopsia radioquirúrgica.",
+                        "rationale": "La evaluación de microcalcificaciones se realiza mediante mamografía de la pieza extirpada, no con la inyección de Tecnecio 99 para el ganglio centinela.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Realizar el vaciamiento axilar completo en todos los casos de cáncer de mama.",
+                        "rationale": "El objetivo de la detección del ganglio centinela es precisamente evitar vaciamientos axilares innecesarios si el ganglio centinela es negativo para metástasis.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "Si un patólogo utiliza la tinción de `Grocott`, ¿qué tipo de microorganismo está buscando principalmente en la muestra de tejido?",
+                "hint": "Esta tinción es conocida por su afinidad por las paredes celulares de un grupo específico de patógenos.",
+                "answerOptions": [
+                    {
+                        "text": "Bacterias (ej. Helicobacter pylori).",
+                        "rationale": "Para Helicobacter pylori se utiliza la tinción de Giemsa; Grocott no es la tinción principal para bacterias.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Virus (ej. Virus de la hepatitis).",
+                        "rationale": "Los virus no se detectan directamente con tinciones histoquímicas como Grocott; se utilizan métodos como la inmunohistoquímica.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Hongos.",
+                        "rationale": "La tinción de Grocott (Gomori Metenamina de Plata) es una técnica histoquímica estándar y muy efectiva para visualizar hongos en los tejidos debido a su afinidad por los polisacáridos de sus paredes celulares.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Parásitos (ej. Toxoplasma).",
+                        "rationale": "Para parásitos como Toxoplasma, se utilizan otras técnicas, a menudo inmunohistoquímicas, no la tinción de Grocott.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué método auxiliar es más adecuado para la clasificación de leucemias y linfomas mediante el análisis de antígenos de membrana en células en suspensión?",
+                "hint": "Este método permite un análisis rápido de múltiples características celulares individuales utilizando anticuerpos fluorescentes.",
+                "answerOptions": [
+                    {
+                        "text": "Inmunohistoquímica (IHQ).",
+                        "rationale": "La IHQ se utiliza en cortes de tejido para clasificar tumores, pero la citometría de flujo es más específica para el análisis de células en suspensión en leucemias y linfomas.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Microscopía electrónica.",
+                        "rationale": "La microscopía electrónica ofrece detalles ultraestructurales, pero no es el método principal para la clasificación de leucemias y linfomas basada en antígenos de membrana.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Citometría de flujo.",
+                        "rationale": "La citometría de flujo es el método ideal para este propósito, ya que permite el análisis simultáneo de múltiples características celulares, incluyendo antígenos de membrana, en grandes poblaciones de células en suspensión.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Histoquímica.",
+                        "rationale": "La histoquímica es útil para identificar componentes químicos en los tejidos, pero no para la clasificación detallada de leucemias y linfomas basada en el perfil de antígenos de membrana.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál de los siguientes no es un objetivo asistencial de la autopsia anátomo-clínica?",
+                "hint": "Considere qué objetivos se centran en la atención directa al paciente y cuáles son más amplios.",
+                "answerOptions": [
+                    {
+                        "text": "Establecer la causa inmediata de muerte.",
+                        "rationale": "Este es un objetivo asistencial directo, ya que busca comprender la causa final del fallecimiento del paciente.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Evaluar los diagnósticos clínicos.",
+                        "rationale": "La evaluación de diagnósticos es un componente clave para mejorar la precisión y calidad de la atención médica futura.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Brindar datos certeros de mortalidad para registro de tumores.",
+                        "rationale": "Este objetivo se relaciona con la epidemiología y la salud pública, no directamente con la asistencia individual al paciente.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Detectar enfermedades no sospechadas.",
+                        "rationale": "La detección de enfermedades no diagnosticadas previamente es un beneficio asistencial importante para el entendimiento del caso y la información a la familia.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "Según la técnica de Rokitansky, ¿cuáles son los órganos que sufren lisis rápida y deben extraerse antes de continuar con la evisceración en bloque?",
+                "hint": "Piense en órganos con alta actividad metabólica o composición delicada que se degradan rápidamente post-mortem.",
+                "answerOptions": [
+                    {
+                        "text": "Corazón y pulmones.",
+                        "rationale": "El corazón y los pulmones se estudian en un bloque cardiopulmonar, pero no son los primeros en extraerse por su lisis rápida.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Hígado y vesícula biliar.",
+                        "rationale": "El hígado se estudia en un bloque hepático, pero no es de los primeros en extraerse por lisis rápida, a diferencia de otros órganos más sensibles.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Glándulas suprarrenales, páncreas, estómago, tiroides y paratiroides.",
+                        "rationale": "Estos órganos son conocidos por su rápida autolisis post-mortem, lo que requiere su extracción y fijación temprana para preservar su morfología y permitir un estudio adecuado.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Riñones, uréteres y vejiga.",
+                        "rationale": "Estos forman el bloque renal y no son considerados órganos de lisis tan rápida como los mencionados en la opción correcta.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué se entiende por 'anisocariosis' en los criterios nucleares de malignidad en citopatología?",
+                "hint": "El prefijo 'aniso-' se refiere a la desigualdad.",
+                "answerOptions": [
+                    {
+                        "text": "Aumento de la coloración del núcleo.",
+                        "rationale": "Esto se conoce como hipercromasia, no anisocariosis.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Núcleos de diferente forma.",
+                        "rationale": "Esto se denomina poiquilocariosis, no anisocariosis.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Aumento del tamaño nuclear.",
+                        "rationale": "Esto se describe como macrocariosis, no anisocariosis.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Núcleos de diferentes tamaños.",
+                        "rationale": "La anisocariosis se refiere a la variación en el tamaño de los núcleos, un indicador común de atipia celular y malignidad.",
+                        "isCorrect": true
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál es la principal ventaja de la PAAF (punción aspiración con aguja fina) en comparación con otros métodos de obtención de células?",
+                "hint": "Considere el nivel de invasión del procedimiento.",
+                "answerOptions": [
+                    {
+                        "text": "Permite evaluar la relación núcleo-citoplasma con mayor precisión.",
+                        "rationale": "Si bien la PAAF permite evaluar la relación núcleo-citoplasma, su principal ventaja no es la precisión en esta evaluación, sino su naturaleza mínimamente invasiva.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Es el único método que no requiere anestesia local.",
+                        "rationale": "Aunque a menudo no requiere anestesia local, no es el único método sin este requisito, y la invasión mínima es una característica más destacada.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Permite un diagnóstico con invasión mínima.",
+                        "rationale": "La capacidad de obtener una muestra diagnóstica con una aguja de pequeño calibre, reduciendo el trauma y el riesgo para el paciente, es la ventaja más significativa de la PAAF.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Siempre se realiza guiada por métodos imagenológicos.",
+                        "rationale": "La PAAF puede ser guiada por imagen, pero también se realiza en masas palpables sin guía imagenológica, por lo que no es una ventaja exclusiva o principal.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué tipo de biopsia se realiza para obtener material de órganos huecos como el tubo digestivo o el árbol respiratorio, utilizando un tubo con una videocámara y pinzas?",
+                "hint": "Este procedimiento permite la visualización directa del interior del órgano.",
+                "answerOptions": [
+                    {
+                        "text": "Biopsia por punción a ciegas.",
+                        "rationale": "La biopsia por punción a ciegas no permite la visualización directa del órgano y no se usa típicamente para órganos huecos.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia estereotáxica.",
+                        "rationale": "La biopsia estereotáxica se utiliza principalmente para lesiones en SNC o mama, guiada por coordenadas, no para órganos huecos con visualización directa.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia endoscópica.",
+                        "rationale": "La biopsia endoscópica es el método que utiliza un endoscopio (tubo con cámara y pinzas) para visualizar y tomar muestras de órganos huecos como el tracto digestivo o respiratorio.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Biopsia radioquirúrgica.",
+                        "rationale": "La biopsia radioquirúrgica se aplica a lesiones no palpables de la mama y no implica la introducción de un tubo con cámara en órganos huecos.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál es el propósito de pintar los bordes y el fondo de una biopsia escisional con tinta china durante su procesamiento?",
+                "hint": "Piense en cómo esta acción ayuda al patólogo a evaluar la extirpación completa de la lesión.",
+                "answerOptions": [
+                    {
+                        "text": "Para facilitar la coloración con Hematoxilina-Eosina.",
+                        "rationale": "La tinta china no tiene relación con la tinción de H&E; su propósito es macroscópico y de orientación.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Para distinguirlos a la observación microscópica y asegurar que la lesión fue extirpada en su totalidad.",
+                        "rationale": "La tinta china marca los márgenes de resección, permitiendo al patólogo evaluar microscópicamente si la lesión se extiende hasta el borde del tejido extirpado, lo cual es crucial para la radicalidad de la cirugía.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Para evitar la deshidratación del tejido durante el procesamiento.",
+                        "rationale": "La fijación en formol y los pasos posteriores de procesamiento son los que controlan la deshidratación, no la tinta china.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Para determinar el peso exacto de la muestra.",
+                        "rationale": "El pesaje de la muestra se realiza antes de la aplicación de tinta china y no está relacionado con esta acción.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué técnica histoquímica se menciona en el texto como útil para la detección de hongos?",
+                "hint": "Busque la tinción que es conocida por su capacidad para resaltar las paredes celulares de estos microorganismos.",
+                "answerOptions": [
+                    {
+                        "text": "Ziehl Neelsen.",
+                        "rationale": "Ziehl Neelsen se utiliza para bacilos ácido-alcohol resistentes como el de la tuberculosis, no para hongos.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Rojo Congo.",
+                        "rationale": "Rojo Congo se emplea para detectar sustancia amiloide, no hongos.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Grocott.",
+                        "rationale": "La tinción de Grocott (Gomori Metenamina de Plata) es específicamente utilizada para la visualización de hongos en muestras de tejido.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Giemsa.",
+                        "rationale": "Giemsa se usa para Helicobacter pylori y otros microorganismos, pero no es la tinción principal para hongos.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál es el principal uso de la Citometría de Flujo en la patología, según el texto?",
+                "hint": "Este método es particularmente útil para analizar células individuales en suspensión y sus características de superficie.",
+                "answerOptions": [
+                    {
+                        "text": "Evaluar la ultraestructura de orgánulos celulares.",
+                        "rationale": "La evaluación de la ultraestructura es el dominio de la microscopía electrónica, no de la citometría de flujo.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Clasificar leucemias y linfomas mediante la identificación de antígenos de superficie.",
+                        "rationale": "La citometría de flujo es fundamental para la clasificación de leucemias y linfomas al permitir el análisis rápido y detallado de los antígenos presentes en la superficie de las células sanguíneas y linfoides.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Determinar el sitio de origen de tumores metastásicos.",
+                        "rationale": "La determinación del sitio de origen de metástasis se realiza principalmente con inmunohistoquímica, no con citometría de flujo.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Visualizar la fibrosis en los tejidos.",
+                        "rationale": "La visualización de fibrosis se logra con tinciones histoquímicas como el tricrómico de Masson, no con citometría de flujo.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué tipo de autopsia se realiza cuando el estudio se limita a algunos órganos o partes de órganos?",
+                "hint": "Considere la extensión del estudio.",
+                "answerOptions": [
+                    {
+                        "text": "Autopsia total.",
+                        "rationale": "La autopsia total implica el estudio de todos los órganos, no solo de algunos.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Autopsia médico-legal.",
+                        "rationale": "La clasificación por finalidad (médico-legal) es diferente a la clasificación por amplitud del estudio.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Autopsia anátomo-clínica.",
+                        "rationale": "La clasificación por finalidad (anátomo-clínica) es diferente a la clasificación por amplitud del estudio.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Autopsia parcial.",
+                        "rationale": "La autopsia parcial se define precisamente como aquella que estudia solo algunos órganos o partes de órganos.",
+                        "isCorrect": true
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué se evalúa en el informe anatomopatológico de la citología de esputo para determinar la calidad del extendido?",
+                "hint": "Piense en qué indica si la muestra es útil para el diagnóstico del árbol bronquial.",
+                "answerOptions": [
+                    {
+                        "text": "El número total de células rojas.",
+                        "rationale": "Si bien las células rojas pueden estar presentes, la cantidad de las mismas no es el principal indicador de la representatividad de la muestra bronquial.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Si se trata de muestras representativas del árbol bronquial.",
+                        "rationale": "La calidad del extendido en la citología de esputo se refiere a si las células obtenidas son verdaderamente representativas del árbol bronquial, lo que es crucial para un diagnóstico preciso.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "La presencia de bacterias en la muestra.",
+                        "rationale": "La presencia de bacterias puede ser un hallazgo, pero no es el criterio principal para evaluar la calidad o representatividad del extendido para el diagnóstico de patologías broncopulmonares.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "El color y la consistencia del esputo.",
+                        "rationale": "El color y la consistencia son características macroscópicas y no determinan la calidad microscópica del extendido celular para el diagnóstico.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué tipo de biopsia se indica para lesiones no palpables de la mama detectadas por mamografía (microcalcificaciones) o ecografía (nódulo)?",
+                "hint": "Este tipo de biopsia requiere la colaboración de un imagenólogo para guiar la extirpación.",
+                "answerOptions": [
+                    {
+                        "text": "Biopsia por punción a ciegas.",
+                        "rationale": "La biopsia por punción a ciegas no es adecuada para lesiones no palpables, ya que no hay una guía visual para la aguja.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia incisional.",
+                        "rationale": "Una biopsia incisional se usa para lesiones palpables o difusas, no para guiar la extirpación de lesiones no palpables.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Biopsia radioquirúrgica.",
+                        "rationale": "La biopsia radioquirúrgica está específicamente indicada para lesiones mamarias no palpables, donde se utiliza la guía por imagen para la localización y extirpación quirúrgica.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Biopsia de órgano.",
+                        "rationale": "La biopsia de órgano se refiere al estudio de un órgano completo o parte de él, pero no especifica el método para localizar y extirpar lesiones no palpables.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál es la relación normal entre el núcleo y el citoplasma en una célula, que se considera alterada en los criterios de malignidad?",
+                "hint": "Piense en la proporción de tamaño entre estas dos partes de la célula en condiciones normales.",
+                "answerOptions": [
+                    {
+                        "text": "Entre 1:1 y 1:2.",
+                        "rationale": "Una relación de 1:1 o 1:2 (núcleo casi tan grande como el citoplasma) es característica de células malignas, no de una relación normal.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Entre 1:4 y 1:5.",
+                        "rationale": "Esta es la relación normal esperada entre el tamaño del núcleo y el citoplasma en células sanas, la cual se altera en la malignidad (generalmente aumentando la proporción nuclear).",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Mayor a 1:5.",
+                        "rationale": "Una relación mayor a 1:5 significaría que el citoplasma es proporcionalmente mucho más grande que el núcleo, lo cual no es una característica de malignidad.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "No existe una relación normal establecida.",
+                        "rationale": "Sí existe una relación normal establecida que sirve como referencia para identificar cambios patológicos.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué tipo de material se procesa como 'coágulo' en la PAAF y se incluye en parafina para obtener un bloque de patología quirúrgica?",
+                "hint": "Piense en el material que no se extiende directamente en los portaobjetos.",
+                "answerOptions": [
+                    {
+                        "text": "El material sanguinolento inicial aspirado.",
+                        "rationale": "El material sanguinolento inicial es el que se extiende sobre los portaobjetos para la citología directa.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "El material remanente en la jeringa después de hacer los extendidos.",
+                        "rationale": "El material que queda en la jeringa, a menudo coagulado, se fija en alcohol-formol y se procesa como un bloque de tejido para un análisis histopatológico más detallado, similar a una biopsia.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Las células descamadas espontáneamente.",
+                        "rationale": "Las células descamadas espontáneamente son parte de la citología exfoliativa, no del procesamiento de la PAAF como coágulo.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "El líquido de lavado broncoalveolar.",
+                        "rationale": "El líquido de lavado broncoalveolar es un tipo de citología de líquidos y se procesa de manera diferente, generalmente por centrifugación o ultrafiltrado.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Cuál es el principal objetivo del examen macroscópico de los órganos extraídos en una autopsia?",
+                "hint": "Considere qué información se obtiene a simple vista antes de cualquier análisis microscópico.",
+                "answerOptions": [
+                    {
+                        "text": "Realizar cortes de 4 a 6 micras para la coloración con H-E.",
+                        "rationale": "Los cortes microscópicos y la tinción con H-E son parte del procesamiento histológico, que ocurre después del examen macroscópico.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Medir, pesar y describir detalladamente las características observables de los órganos.",
+                        "rationale": "El examen macroscópico se centra en la observación, medición y descripción de las características visibles de los órganos, como su forma, tamaño, peso, color, consistencia y cualquier hallazgo patológico aparente.",
+                        "isCorrect": true
+                    },
+                    {
+                        "text": "Detectar la presencia de antígenos celulares específicos.",
+                        "rationale": "La detección de antígenos celulares se realiza mediante métodos auxiliares como la inmunohistoquímica, que requieren análisis microscópico y técnicas moleculares.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Determinar la causa básica de muerte (CBM).",
+                        "rationale": "La CBM es una conclusión final del protocolo de autopsia, que se basa en la integración de hallazgos macroscópicos, microscópicos y clínicos, no solo en el examen macroscópico inicial.",
+                        "isCorrect": false
+                    }
+                ]
+            },
+            {
+                "question": "¿Qué método auxiliar es crucial para el diagnóstico de ciertas glomerulopatías que no pueden ser alcanzadas por microscopía óptica e inmunofluorescencia?",
+                "hint": "Este método ofrece una magnificación extremadamente alta, permitiendo ver detalles ultraestructurales.",
+                "answerOptions": [
+                    {
+                        "text": "Histoquímica.",
+                        "rationale": "La histoquímica es útil para identificar componentes químicos en los tejidos, pero no proporciona el nivel de detalle ultraestructural necesario para diagnosticar ciertas glomerulopatías complejas.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Inmunohistoquímica (IHQ).",
+                        "rationale": "La IHQ detecta antígenos específicos, pero si la microscopía óptica y la inmunofluorescencia son insuficientes, se necesita un nivel de detalle morfológico superior.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Citometría de flujo.",
+                        "rationale": "La citometría de flujo analiza células en suspensión y sus antígenos, lo cual no es relevante para el diagnóstico morfológico de glomerulopatías en tejido fijo.",
+                        "isCorrect": false
+                    },
+                    {
+                        "text": "Microscopía electrónica.",
+                        "rationale": "La microscopía electrónica, con su capacidad de 500.000 aumentos, es fundamental para visualizar las alteraciones ultraestructurales en el glomérulo que son diagnósticas en algunas glomerulopatías complejas.",
+                        "isCorrect": true
+                    }
+                ]
+            }
+          ];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedAnswer = null;
+
+        const questionNumberElement = document.getElementById('question-number');
+        const questionTextElement = document.getElementById('question-text');
+        const hintTextElement = document.getElementById('hint-text');
+        const answerOptionsElement = document.getElementById('answer-options');
+        const feedbackBoxElement = document.getElementById('feedback-box');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+        const scoreDisplayElement = document.getElementById('score-display');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex < questions.length) {
+                const questionData = questions[currentQuestionIndex];
+                questionNumberElement.textContent = `Pregunta ${currentQuestionIndex + 1} de ${questions.length}`;
+                questionTextElement.textContent = questionData.question;
+                hintTextElement.textContent = `Pista: ${questionData.hint}`;
+                answerOptionsElement.innerHTML = '';
+                feedbackBoxElement.classList.add('hidden');
+                feedbackBoxElement.textContent = '';
+                selectedAnswer = null;
+                nextButton.disabled = true;
+                nextButton.style.backgroundColor = '#d1d5db'; // Grey out button
+
+                // Shuffle answer options for each question
+                const shuffledOptions = [...questionData.answerOptions];
+                shuffleArray(shuffledOptions);
+
+                shuffledOptions.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = option.text;
+                    button.onclick = () => selectAnswer(button, option);
+                    answerOptionsElement.appendChild(button);
+                });
+            } else {
+                showResults();
+            }
+        }
+
+        function selectAnswer(button, option) {
+            // Disable all buttons once an answer is selected
+            Array.from(answerOptionsElement.children).forEach(btn => {
+                btn.disabled = true;
+                btn.classList.remove('selected');
+            });
+
+            button.classList.add('selected');
+            selectedAnswer = option;
+
+            if (option.isCorrect) {
+                score++;
+                feedbackBoxElement.classList.remove('incorrect');
+                feedbackBoxElement.classList.add('correct');
+                feedbackBoxElement.textContent = `¡Correcto! ${option.rationale}`;
+            } else {
+                feedbackBoxElement.classList.remove('correct');
+                feedbackBoxElement.classList.add('incorrect');
+                feedbackBoxElement.textContent = `Incorrecto. ${option.rationale}`;
+            }
+            feedbackBoxElement.classList.remove('hidden');
+            nextButton.disabled = false;
+            nextButton.style.backgroundColor = '#4f46e5'; // Restore button color
+
+            // Highlight correct answer
+            Array.from(answerOptionsElement.children).forEach(btn => {
+                const correspondingOption = questions[currentQuestionIndex].answerOptions.find(opt => opt.text === btn.textContent);
+                if (correspondingOption.isCorrect) {
+                    btn.classList.add('correct');
+                }
+            });
+        }
+
+        function showResults() {
+            questionNumberElement.classList.add('hidden');
+            questionTextElement.classList.add('hidden');
+            hintTextElement.classList.add('hidden');
+            answerOptionsElement.classList.add('hidden');
+            feedbackBoxElement.classList.add('hidden');
+            nextButton.classList.add('hidden');
+
+            scoreDisplayElement.textContent = `Has completado el quiz. Tu puntuación es: ${score} de ${questions.length}`;
+            scoreDisplayElement.classList.remove('hidden');
+            restartButton.classList.remove('hidden');
+        }
+
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreDisplayElement.classList.add('hidden');
+            restartButton.classList.add('hidden');
+
+            questionNumberElement.classList.remove('hidden');
+            questionTextElement.classList.remove('hidden');
+            hintTextElement.classList.remove('hidden');
+            answerOptionsElement.classList.remove('hidden');
+            nextButton.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            loadQuestion();
+        });
+
+        restartButton.addEventListener('click', restartQuiz);
+
+        loadQuestion(); // Initial load of the first question
+    </script>
+</body>
+</html>
